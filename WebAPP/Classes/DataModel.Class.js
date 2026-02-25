@@ -821,10 +821,34 @@ export class DataModel{
         return ConstraintTechs;
     }
 
+    // static getCaserunByScenario(genData, resData){
+    //     let scenarios = genData["osy-scenarios"];
+    //     let caseruns = resData["osy-cases"];
+    //     let csbysc = {};
+    //     $.each(scenarios, function (i, objSc) {
+    //         csbysc[objSc.ScenarioId] = [];
+    //         if (caseruns.length != 0) {
+    //             $.each(caseruns, function (j, objCs) {
+    //                 $.each(objCs.Scenarios, function (k, objCsSc) {
+    //                     if(objCsSc.Active == true && objSc.ScenarioId == objCsSc.ScenarioId){
+    //                         csbysc[objSc.ScenarioId].push(objCs.Case)
+    //                     }
+    //                 });
+    //             });
+    //         }
+    //     });
+    //     return csbysc;
+    // }
     static getCaserunByScenario(genData, resData){
+        if (!resData || !resData["osy-cases"]) {
+            console.warn("No case data found.");
+            return {};
+        }
+
         let scenarios = genData["osy-scenarios"];
         let caseruns = resData["osy-cases"];
         let csbysc = {};
+
         $.each(scenarios, function (i, objSc) {
             csbysc[objSc.ScenarioId] = [];
             if (caseruns.length != 0) {
@@ -837,6 +861,7 @@ export class DataModel{
                 });
             }
         });
+
         return csbysc;
     }
 

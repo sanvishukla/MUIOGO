@@ -2,8 +2,8 @@
 export class Model {
     constructor (casename, genData, resData, pageId) {
       if(casename){
-
-        let cases = resData['osy-cases'];
+        // let cases = resData['osy-cases'];
+        let cases = (resData && resData['osy-cases']) ? resData['osy-cases'] : [];
         let scenarios =  genData['osy-scenarios'];
         //let scenarios =  resData['osy-cases'][0]['Scenarios']
         let cs = null;
@@ -14,7 +14,8 @@ export class Model {
         });
 
         let scBycs = {};
-        $.each(resData['osy-cases'], function (id, cs) {
+        // $.each(resData['osy-cases'], function (id, cs) {
+        $.each(cases, function (id, cs) {
           scBycs[cs.Case] = cs.Scenarios
         });
 
