@@ -9,8 +9,16 @@ from Classes.Case.CaseClass import Case
 from Classes.Case.UpdateCaseClass import UpdateCase
 from Classes.Case.ImportTemplate import ImportTemplate
 from Classes.Base.SyncS3 import SyncS3
+from pathlib import Path
 
 case_api = Blueprint('CaseRoute', __name__)
+
+def validate_case_exists(casename):
+    if not casename:
+        return False
+    case_path = Path(Config.DATA_STORAGE, casename)
+    return case_path.exists()
+
 
 @case_api.route("/initSyncS3", methods=['GET'])
 def initSyncS3():
@@ -56,7 +64,15 @@ def getResultCSV():
 def getDesc():
     try:
         casename = request.json['casename']
-        genDataPath = Path(Config.DATA_STORAGE,casename,"genData.json")
+        # genDataPath = Path(Config.DATA_STORAGE,casename,"genData.json")
+        # genData = File.readFile(genDataPath)
+        if not validate_case_exists(casename):
+            return jsonify({
+                "error": "CASE_NOT_FOUND",
+                "message": f"Case '{casename}' does not exist."
+            }), 404
+
+        genDataPath = Path(Config.DATA_STORAGE, casename, "genData.json")
         genData = File.readFile(genDataPath)
         response = {
             "message": "Get model description success",
@@ -116,6 +132,11 @@ def deleteCase():
             return jsonify({'message': 'Unauthorised: case does not match active session.', 'status_code': 'error'}), 403
 
         casePath = Path(Config.DATA_STORAGE, case)
+        if not casePath.exists():
+            return jsonify({
+                "message": "Case does not exist",
+                "status_code": "warning"
+            }), 200
         shutil.rmtree(casePath)
 
         session['osycase'] = None
@@ -160,6 +181,8 @@ def getParamFile():
 def resultsExists():
     try:
         casename = request.json['casename']
+        if not validate_case_exists(casename):
+            return jsonify(False), 200
         if casename != None:
             resPath = Path(Config.DATA_STORAGE, casename, 'view', 'RYT.json')
             dataPath = Path(Config.DATA_STORAGE,casename,'view','resData.json')
@@ -223,6 +246,10 @@ def updateData():
         param = request.json['param']
         case = session.get('osycase', None)
         dataJson = request.json['dataJson']
+        if not validate_case_exists(case):
+            return jsonify({
+                "error": "CASE_NOT_FOUND"
+            }), 404
         dataPath = Path(Config.DATA_STORAGE, case, dataJson)
         if case != None:
             sourceData = File.readFile(dataPath)
