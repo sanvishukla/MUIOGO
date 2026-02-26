@@ -26,6 +26,23 @@ ALLOWED_EXTENSIONS_XLS = set(['xls', 'xlsx'])
 # This file is in: API/Classes/Base/Config.py
 # So project root is 3 levels up
 BASE_DIR = Path(__file__).resolve().parents[3]
+<<<<<<< HEAD
+=======
+
+WEBAPP_PATH = BASE_DIR / "WebAPP"
+
+UPLOAD_FOLDER = WEBAPP_PATH
+DATA_STORAGE = WEBAPP_PATH / "DataStorage"
+CLASS_FOLDER = WEBAPP_PATH / "Classes"
+SOLVERs_FOLDER = WEBAPP_PATH / "SOLVERs"
+EXTRACT_FOLDER = BASE_DIR
+
+# Ensure DataStorage exists before chmod
+DATA_STORAGE.mkdir(parents=True, exist_ok=True)
+# os.chmod(DATA_STORAGE, 0o777)
+if DATA_STORAGE.exists() and os.environ.get("ENV", "production") == "development":
+    os.chmod(DATA_STORAGE, 0o755)
+>>>>>>> 7c80f7b1 (Align startup validation with merged path/solver logic (local-first resolution + Config-based paths))
 
 WEBAPP_PATH = BASE_DIR / "WebAPP"
 
@@ -53,8 +70,6 @@ if not os.access(DATA_STORAGE, os.W_OK):
 <<<<<<< HEAD
 =======
 # os.chmod(DATA_STORAGE, 0o777)
-if DATA_STORAGE.exists() and os.environ.get("ENV", "production") == "development":
-    os.chmod(DATA_STORAGE, 0o755)
 
 >>>>>>> 725648bc (Fix config issues: correct EmissionActivityRatio typo, remove duplicate keys, and refine DATA_STORAGE permission handling)
 HEROKU_DEPLOY = 0
