@@ -5,6 +5,7 @@ import os
 from flask import Flask, jsonify, request, session, render_template
 from flask_cors import CORS
 from datetime import timedelta
+from pathlib import Path
 # from pathlib import Path
 
 #import json
@@ -145,8 +146,22 @@ if __name__ == '__main__':
     except StartupValidationError as e:
         print(str(e))
         exit(1)
+<<<<<<< HEAD
     print("PORTTTTTTTTTTT")
 >>>>>>> e4c46816 (Add structured startup validation for solvers and required directories (Issue #3))
+=======
+
+    def print_startup_info(host, current_port, server_name):
+        mode = 'local' if Config.HEROKU_DEPLOY == 0 else 'heroku'
+        access_host = '127.0.0.1' if host == '0.0.0.0' else host
+        print("MUIOGO API starting...")
+        print(f"Server: {server_name}")
+        print(f"Mode: {mode}")
+        print(f"Host: {host}")
+        print(f"Port: {current_port}")
+        print(f"Open: http://{access_host}:{current_port}")
+
+>>>>>>> 839a565c (Apply startup validation changes)
     if Config.HEROKU_DEPLOY == 0: 
         #localhost
         #app.run(host='127.0.0.1', port=port, debug=True)

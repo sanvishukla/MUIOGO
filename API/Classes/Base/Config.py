@@ -68,10 +68,13 @@ if not os.access(DATA_STORAGE, os.W_OK):
 # SOLVERs_FOLDER = Path(OSEMOSYS_ROOT, 'WebAPP', 'SOLVERs')
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 # os.chmod(DATA_STORAGE, 0o777)
 
 >>>>>>> 725648bc (Fix config issues: correct EmissionActivityRatio typo, remove duplicate keys, and refine DATA_STORAGE permission handling)
+=======
+>>>>>>> 839a565c (Apply startup validation changes)
 HEROKU_DEPLOY = 0
 AWS_SYNC = 0
 

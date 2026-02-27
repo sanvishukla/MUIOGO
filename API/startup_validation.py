@@ -81,11 +81,18 @@ def _check_binary(binary_name, package_name):
         binary_candidate = f"{binary_name}.exe"
 
     # 1️⃣ Check local solver folder first
-    local_solver_dir = Path(Config.SOLVERs_FOLDER)
-    local_binary = local_solver_dir / binary_candidate
+    # local_solver_dir = Path(Config.SOLVERs_FOLDER)
+    # local_binary = local_solver_dir / binary_candidate
 
-    if local_binary.exists() and os.access(local_binary, os.X_OK):
-        return _get_version_info(str(local_binary))
+    # if local_binary.exists() and os.access(local_binary, os.X_OK):
+    #     return _get_version_info(str(local_binary))
+# 1️⃣ Check local solver folder (recursive search)
+    local_solver_dir = Path(Config.SOLVERs_FOLDER)
+
+    if local_solver_dir.exists():
+        for candidate in local_solver_dir.rglob(binary_candidate):
+            if candidate.is_file() and os.access(candidate, os.X_OK):
+                return _get_version_info(str(candidate))
 
     # 2️⃣ Fallback to system PATH
     system_path = shutil.which(binary_name)
