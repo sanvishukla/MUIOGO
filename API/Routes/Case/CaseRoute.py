@@ -9,7 +9,6 @@ from Classes.Case.CaseClass import Case
 from Classes.Case.UpdateCaseClass import UpdateCase
 from Classes.Case.ImportTemplate import ImportTemplate
 from Classes.Base.SyncS3 import SyncS3
-from pathlib import Path
 
 case_api = Blueprint('CaseRoute', __name__)
 
@@ -17,18 +16,16 @@ def validate_case_exists(casename):
     if not casename:
         return False
     case_path = Path(Config.DATA_STORAGE, casename)
-    return case_path.exists()
+    return case_path.is_dir()
 
 
 @case_api.route("/initSyncS3", methods=['GET'])
 def initSyncS3():
     try:
-        #sync bucket with local storage
         syncS3 = SyncS3()
         cases = syncS3.getCasesSyncInit()
         for case in cases:
             syncS3.downloadSync(case, Config.DATA_STORAGE, Config.S3_BUCKET)
-        #downoload param file from S3 bucket
         syncS3.downloadSync('Parameters.json', Config.DATA_STORAGE, Config.S3_BUCKET)
         response = {
             "message": "Cases syncronized with S3 bucket!",
@@ -64,8 +61,6 @@ def getResultCSV():
 def getDesc():
     try:
         casename = request.json['casename']
-        # genDataPath = Path(Config.DATA_STORAGE,casename,"genData.json")
-        # genData = File.readFile(genDataPath)
         if not validate_case_exists(casename):
             return jsonify({
                 "error": "CASE_NOT_FOUND",
@@ -74,13 +69,12 @@ def getDesc():
 
         genDataPath = Path(Config.DATA_STORAGE, casename, "genData.json")
         genData = File.readFile(genDataPath)
-        response = {
+        return jsonify({
             "message": "Get model description success",
-            "desc": genData['osy-desc']
-        }
-        return jsonify(response), 200
-    except(IOError):
-        return jsonify('No existing cases!'), 404
+            "desc": genData.get('osy-desc')
+        }), 200
+    except Exception:
+        return jsonify({'message': 'Error loading case.'}), 500
 
 @case_api.route("/copyCase", methods=['POST'])
 def copy():
@@ -92,33 +86,40 @@ def copy():
             return jsonify({'message': 'No active session.', 'status_code': 'error'}), 403
         if case != active_case:
             return jsonify({'message': 'Unauthorised: case does not match active session.', 'status_code': 'error'}), 403
-
-        case_copy = case + '_copy'
-        casePath = Path(Config.DATA_STORAGE, case_copy, 'genData.json')
-
-        src =  Path(Config.DATA_STORAGE, case)
-        dest =  Path(Config.DATA_STORAGE, case + '_copy')
-
-        if(os.path.isdir(dest)):
-            response = {
-                "message": 'Model <b>'+ case + '_copy</b> already exists, please rename existing model first!',
+        
+        src = Path(Config.DATA_STORAGE, case)
+        if not src.is_dir():
+            session['osycase'] = None
+            return jsonify({
+                "message": "Source case does not exist.",
                 "status_code": "warning"
-            }
-        else:
-            shutil.copytree(str(src), str(dest) )
-            #rename casename in genData
-            genData = File.readFile(casePath)
-            genData['osy-casename'] = case_copy
-            File.writeFile(genData, casePath)
-            response = {
-                "message": 'Model <b>'+ case + '</b> copied!',
-                "status_code": "success"
-            }
-        return(response)
-    except(IOError):
-        raise IOError
-    except OSError:
-        raise OSError
+            }), 200
+        
+        case_copy = case + '_copy'
+        dest = Path(Config.DATA_STORAGE, case_copy)
+
+
+        if dest.is_dir():
+            return jsonify({
+                'message': f'Model <b>{case_copy}</b> already exists.',
+                'status_code': 'warning'
+            }), 200
+
+        shutil.copytree(src, dest)
+
+        casePath = Path(Config.DATA_STORAGE, case_copy, 'genData.json')
+        genData = File.readFile(casePath)
+        genData['osy-casename'] = case_copy
+        File.writeFile(genData, casePath)
+
+        return jsonify({
+            'message': f'Model <b>{case}</b> copied!',
+            'status_code': 'success'
+        }), 200
+
+    except Exception as e:
+        return jsonify({'message': str(e), 'status_code': 'error'}), 500
+
 
 @case_api.route("/deleteCase", methods=['POST'])
 def deleteCase():
@@ -132,23 +133,24 @@ def deleteCase():
             return jsonify({'message': 'Unauthorised: case does not match active session.', 'status_code': 'error'}), 403
 
         casePath = Path(Config.DATA_STORAGE, case)
-        if not casePath.exists():
+        if not casePath.is_dir():
+            session['osycase'] = None
             return jsonify({
-                "message": "Case does not exist",
-                "status_code": "warning"
+                'message': 'Case does not exist.',
+                'status_code': 'success_session'
             }), 200
         shutil.rmtree(casePath)
 
         session['osycase'] = None
-        response = {
-            "message": 'Model <b>'+ case + '</b> deleted!',
-            "status_code": "success_session"
-        }
-        return jsonify(response), 200
-    except(IOError):
-        return jsonify('No existing cases!'), 404
-    except OSError:
-        raise OSError
+
+        return jsonify({
+            'message': f'Model <b>{case}</b> deleted!',
+            'status_code': 'success_session'
+        }), 200
+
+    except Exception as e:
+        return jsonify({'message': str(e), 'status_code': 'error'}), 500
+
 
 @case_api.route("/getResultData", methods=['POST'])
 def getResultData():
@@ -180,28 +182,25 @@ def getParamFile():
 @case_api.route("/resultsExists", methods=['POST'])
 def resultsExists():
     try:
-        casename = request.json['casename']
+        casename = request.json.get('casename')
         if not validate_case_exists(casename):
             return jsonify(False), 200
-        if casename != None:
-            resPath = Path(Config.DATA_STORAGE, casename, 'view', 'RYT.json')
-            dataPath = Path(Config.DATA_STORAGE,casename,'view','resData.json')
-            data = File.readFile(dataPath)
-            if os.path.isfile(resPath) and data['osy-cases']:
-                RYTTs = File.readFile(resPath)
-                if data['osy-cases'] and RYTTs["ANC"]:
-                    response = True      
-                else:
-                    response = False 
-            else:
-                response = False
-        else:
-            response = False
-        #response = True
-        return jsonify(response), 200
-    except(IOError):
-        return jsonify('No existing cases!'), 404
 
+        resPath = Path(Config.DATA_STORAGE, casename, 'view', 'RYT.json')
+        dataPath = Path(Config.DATA_STORAGE,casename,'view','resData.json')
+        if not resPath.is_file() or not dataPath.is_file():
+            return jsonify(False), 200
+        data = File.readFile(dataPath)
+        RYTTs = File.readFile(resPath)
+        if data.get('osy-cases') and RYTTs.get("ANC"):
+            return jsonify(True), 200
+
+        return jsonify(False), 200
+
+    except Exception:
+        return jsonify(False), 200
+
+    
 @case_api.route("/saveParamFile", methods=['POST'])
 def saveParamFile():
     try:
@@ -242,34 +241,44 @@ def saveScOrder():
 @case_api.route("/updateData", methods=['POST'])
 def updateData():
     try:
-        data = request.json['data']
-        param = request.json['param']
-        case = session.get('osycase', None)
-        dataJson = request.json['dataJson']
+        case = session.get('osycase')
+
+        if not case:
+            return jsonify({"error": "NO_ACTIVE_CASE"}), 403
+
         if not validate_case_exists(case):
-            return jsonify({
-                "error": "CASE_NOT_FOUND"
-            }), 404
+            session['osycase'] = None
+            return jsonify({"error": "CASE_NOT_FOUND"}), 404
+
+        data = request.json.get('data')
+        param = request.json.get('param')
+        dataJson = request.json.get('dataJson')
+
         dataPath = Path(Config.DATA_STORAGE, case, dataJson)
-        if case != None:
-            sourceData = File.readFile(dataPath)
-            sourceData[param] = data
-            File.writeFile(sourceData, dataPath)
-            #File.writeFileUJson(sourceData, dataPath)
-            response = {
-                "message": "Your data has been saved!",
-                "status_code": "success"
-            }      
-        return jsonify(response), 200
-    except(IOError):
-        return jsonify('No existing cases!'), 404
+
+        sourceData = File.readFile(dataPath)
+        sourceData[param] = data
+        File.writeFile(sourceData, dataPath)
+
+        return jsonify({
+            "message": "Your data has been saved!",
+            "status_code": "success"
+        }), 200
+
+    except Exception:
+        return jsonify({'message': 'Error updating data.'}), 500
+
+
+
 
 @case_api.route("/saveCase", methods=['POST'])
 def saveCase():
     try:
         genData = request.json['data']
         casename = genData['osy-casename']
-        case = session.get('osycase', None)
+        if case and not validate_case_exists(case):
+            session.pop('osycase', None)
+            case = None
 
         configPath = Path(Config.DATA_STORAGE, 'Variables.json')
         vars = File.readParamFile(configPath)

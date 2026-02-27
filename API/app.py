@@ -5,7 +5,7 @@ import sys
 from flask import Flask, jsonify, request, session, render_template
 from flask_cors import CORS
 from datetime import timedelta
-# from pathlib import Path
+from pathlib import Path
 
 #import json
 from Classes.Base import Config
@@ -109,6 +109,21 @@ def setSession():
         return jsonify(response), 200
     except KeyError:
         return jsonify('No selected parameters!'), 404
+@app.route("/setSession", methods=['POST'])
+def setSession():
+    try:
+        data = request.get_json()
+        cs = data.get('casename') or data.get('case')
+        if not cs:
+            session['osycase'] = None
+            return jsonify({"osycase": None}), 200
+
+        # Otherwise set normally
+        session['osycase'] = cs
+        return jsonify({"osycase": cs}), 200
+
+    except Exception:
+        return jsonify('Invalid request.'), 400
 
 
 if __name__ == '__main__':
