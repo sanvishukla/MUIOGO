@@ -1,6 +1,7 @@
 import { Osemosys } from "../../Classes/Osemosys.Class.js";
 import { Message } from "../../Classes/Message.Class.js";
 import { Model } from "./Routes.Model.js";
+import { Sidebar } from "../App/Controller/Sidebar.js";
 
 export class Routes {
     static Load(casename) {
@@ -150,7 +151,8 @@ export class Routes {
             console.error(request + ' seems to be a dead end...');
         });
         //setup hasher
-        hasher.init(); //start listening for history change 
+        hasher.init(); //start listening for history change
+
         //Listen to hash changes
         window.addEventListener("hashchange", function() {
             var route = '/';
@@ -159,9 +161,50 @@ export class Routes {
                 route = hash.split('#').pop();
             }
             crossroads.parse(route);
+
+            // Update sidebar active state after route is parsed
+            // Use a small delay to ensure DOM is updated and localStorage is set
+            setTimeout(function() {
+                Sidebar.updateActiveState();
+            }, 150);
         });
-        // trigger hashchange on first page load
-        window.dispatchEvent(new CustomEvent("hashchange"));
+
+        // Trigger initial routing only after sidebar is loaded to avoid flashing
+        let initialTriggered = false;
+        const triggerInitialRoute = function() {
+            if (initialTriggered) return;
+            initialTriggered = true;
+            var route = '/';
+            var hash = window.location.hash;
+            if (hash.length > 0) {
+                route = hash.split('#').pop();
+            }
+            crossroads.parse(route);
+            setTimeout(function() { Sidebar.updateActiveState(); }, 150);
+        };
+
+        // If static sidebar HTML loads, trigger initial route immediately
+        window.addEventListener('sidebarLoaded', triggerInitialRoute);
+        // Fallback: trigger initial route after 500ms in case event missed
+        setTimeout(triggerInitialRoute, 500);
+
+        // When the dynamic sidebar menu is ready, reveal the aside and update active state
+        window.addEventListener('sidebarReady', function() {
+            try {
+                var left = document.getElementById('left-panel');
+                if (left) left.style.display = '';
+            } catch (e) {}
+            Sidebar.updateActiveState();
+        });
+
+        // Safety fallback: reveal the aside after 2000ms if sidebarReady not fired
+        setTimeout(function() {
+            try {
+                var left = document.getElementById('left-panel');
+                if (left && left.style.display === 'none') left.style.display = '';
+            } catch (e) {}
+            Sidebar.updateActiveState();
+        }, 2000);
     }
 }
 

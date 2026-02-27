@@ -7,6 +7,7 @@ import { DEF } from "../../Classes/Definition.Class.js";
 import { MessageSelect } from "./MessageSelect.js";
 import { Chart } from "../../Classes/Chart.Class.js";
 import { DataModel } from "../../Classes/DataModel.Class.js";
+import { Sidebar } from "./Sidebar.js";
 
 export default class RESViewer {
     static onLoad() {
@@ -156,6 +157,7 @@ export default class RESViewer {
 
         //console.log('model js ', model)
         Message.clearMessages();
+            Sidebar.Reload(model.casename);
         let $div = 'osy-RESViewer';
 
         Html.title(model.casename, 'RES Viewer', 'Reference Energy System');

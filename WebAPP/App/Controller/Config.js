@@ -28,7 +28,7 @@ export default class Config {
         .then(data => {
             let [casename, PARAMETERS, VARIABLES] = data;
             let model = new Model(PARAMETERS, VARIABLES);
-            this.initPage(model);
+            this.initPage(model, casename);
             this.initEvents(model);
         })
         .catch(error =>{ 
@@ -36,9 +36,10 @@ export default class Config {
         });
     }
 
-    static initPage(model){
+    static initPage(model, casename){
         Message.clearMessages();
-        Html.title(model.casename, "Parameters", "Year, technology, commodity, emission...");
+        Sidebar.Reload(casename);
+        Html.title(casename, "Parameters", "Year, technology, commodity, emission...");
         let $divParamGrid = $('#osy-gridParam');
         let $divVarGrid = $('#osy-gridVar');
         var daParamGrid = new $.jqx.dataAdapter(model.srcParamGrid);        
@@ -61,7 +62,7 @@ export default class Config {
         .then(data => {
             let [casename, PARAMETERS, VARIABLES] = data;
             let model = new Model(PARAMETERS, VARIABLES);
-            this.initPage(model);
+            this.initPage(model, casename);
             this.initEvents(model);
         })
         .catch(error =>{ 

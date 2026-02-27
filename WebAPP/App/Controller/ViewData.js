@@ -6,6 +6,7 @@ import { Grid } from "../../Classes/Grid.Class.js";
 import { Osemosys } from "../../Classes/Osemosys.Class.js";
 import { DEF } from "../../Classes/Definition.Class.js";
 import { MessageSelect } from "./MessageSelect.js";
+import { Sidebar } from "./Sidebar.js";
 
 export default class ViewData {
     static onLoad() {
@@ -47,6 +48,7 @@ export default class ViewData {
 
     static initPage(model) {
         Message.clearMessages();
+        Sidebar.Reload(model.casename);
         Html.title(model.casename, 'View input data', 'Technologies, commodities, emissions');
         Html.ddlTechs(model.techs, model.techs[0]['TechId']);
 

@@ -99,7 +99,7 @@
 		<!-- #NAVIGATION -->
 		<!-- Left panel : Navigation area -->
 		<!-- Note: This width of the aside area can be adjusted through LESS/SASS variables -->
-		<aside id="left-panel"></aside>
+		<aside id="left-panel" style="display:none"></aside>
 		
 		<!-- #MAIN PANEL -->
 		<div id="main" role="main">	
@@ -134,8 +134,17 @@
 
 		<div id="modals"></div>
 		
-		<script> $("aside").load("App/View/Sidebar.html"); </script>
-        <script> $("header").load("App/View/Navbar.html"); </script>
+		<script>
+			$("aside").load("App/View/Sidebar.html", function() {
+				// notify routes that sidebar is ready
+				window.dispatchEvent(new Event('sidebarLoaded'));
+			});
+		</script>
+		<script>
+			$("header").load("App/View/Navbar.html", function() {
+				window.dispatchEvent(new Event('navbarLoaded'));
+			});
+		</script>
 
 		<!--ROUTES-->
 		<script type="module" src="{{ url_for('static', filename='Routes/Routes.Class.js') }}"></script>

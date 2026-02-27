@@ -9,6 +9,7 @@ import { GROUPNAMES } from "../../Classes/Const.Class.js";
 import { DEF } from "../../Classes/Definition.Class.js";
 import { MessageSelect } from "./MessageSelect.js";
 // import { Sidebar } from "./Sidebar.js";
+import { Sidebar } from "./Sidebar.js";
 
 export default class RY {
     static onLoad(group, param) {
@@ -44,6 +45,7 @@ export default class RY {
     static initPage(model) {
         Message.clearMessages();
         // Sidebar.Load(model.PARAMETERS);
+        Sidebar.Reload(model.casename);
         //Navbar.initPage(model.casename);
         Html.title(model.casename, model.PARAMNAMES[model.param], GROUPNAMES[model.group]);
         Html.ddlParams(model.PARAMETERS[model.group], model.param);

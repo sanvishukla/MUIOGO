@@ -4,6 +4,7 @@ import { Base } from "../../Classes/Base.Class.js";
 import { Osemosys } from "../../Classes/Osemosys.Class.js";
 import { Model } from "../Model/LegacyImport.Model.js";
 import { DEF } from "../../Classes/Definition.Class.js";
+import { Sidebar } from "./Sidebar.js";
 
 export default class LegacyImport {
     static async onLoad(){
@@ -19,6 +20,7 @@ export default class LegacyImport {
 
     static initPage(model){
         Message.clearMessages();
+        Sidebar.Reload(null);
         Html.title('', model.pageID, 'Import facility with OTOOLE provided xls template');
         Html.importData();
         LegacyImport.initEvents(model);

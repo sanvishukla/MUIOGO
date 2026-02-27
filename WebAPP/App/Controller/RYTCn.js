@@ -8,6 +8,7 @@ import { Osemosys } from "../../Classes/Osemosys.Class.js";
 import { GROUPNAMES } from "../../Classes/Const.Class.js";
 import { DEF } from "../../Classes/Definition.Class.js";
 import { MessageSelect } from "./MessageSelect.js";
+import { Sidebar } from "./Sidebar.js";
 
 export default class RYTCn {
     static onLoad(group, param) {
@@ -63,6 +64,7 @@ export default class RYTCn {
     static initPage(model) {
         Message.clearMessages();
         //Navbar.initPage(model.casename);
+            Sidebar.Reload(model.casename);
         Html.title(model.casename, model.PARAMNAMES[model.param], GROUPNAMES[model.group]);
         Html.ddlParams(model.PARAMETERS['RYTCn'], model.param);
         // Html.ddlTechs(model.techs[model.cons[0]['ConId']], model.techs[model.cons[0]['ConId']][0]['TechId']);

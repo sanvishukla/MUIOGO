@@ -7,6 +7,7 @@ import { DEF } from "../../Classes/Definition.Class.js";
 import { MessageSelect } from "../../App/Controller/MessageSelect.js"
 import { DataModelResult } from "../../Classes/DataModelResult.Class.js";
 import { DefaultObj } from "../../Classes/DefaultObj.Class.js";
+import { Sidebar } from "../../App/Controller/Sidebar.js";
 
 export default class Pivot {
     static onLoad() {
@@ -94,6 +95,7 @@ export default class Pivot {
 
     static initPage(model) {
         Message.clearMessages();
+            Sidebar.Reload(model.casename);
         Html.title(model.casename, model.VARNAMES[model.group][model.param], model.group);
 
         //console.log('model ', model)

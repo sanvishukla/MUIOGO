@@ -61,6 +61,7 @@ export default class AddCase {
 
     static initPage(model) {
         Message.clearMessages();
+        Sidebar.Reload(model.casename);
         //$('a[href="#tabComms"]').click();
         //Navbar.initPage(model.casename, model.pageId);
         //console.log('model ', model)

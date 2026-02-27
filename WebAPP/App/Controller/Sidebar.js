@@ -22,9 +22,13 @@ export class Sidebar {
             let model = new Model(PARAMETERS,VARIABLES, genData, RESULTEXISTS);
             this.initAppRoutes(model);
             this.initEvents();
+            // Notify that sidebar menu population is complete
+            try { window.dispatchEvent(new Event('sidebarReady')); } catch(e) {}
         })
         .catch(error => {
             Message.danger(error);
+            // Ensure app doesn't stay hidden if sidebar population fails
+            try { window.dispatchEvent(new Event('sidebarReady')); } catch(e) {}
         });
     }
 
@@ -222,5 +226,63 @@ export class Sidebar {
                 else $this.closest('li').fadeIn();
             });
         });
+
+        // Update active state based on current page
+        this.updateActiveState();
+    }
+
+    /**
+     * Update the sidebar active state based on current page ID from localStorage or hash
+     */
+    static updateActiveState() {
+        // Wait for sidebar to be available in DOM
+        const checkSidebar = () => {
+            // Check if sidebar navigation exists
+            if ($('#Navi').length === 0) {
+                // Sidebar not loaded yet, retry after a short delay
+                setTimeout(checkSidebar, 50);
+                return;
+            }
+
+            // Get current page ID from localStorage
+            let currentPageId = localStorage.getItem("osy-pageId");
+            
+            if (!currentPageId) {
+                // If not in localStorage, try to get from current hash
+                let hash = window.location.hash;
+                if (hash && hash.length > 1) {
+                    // Extract page id from hash (e.g., #/AddCase -> AddCase, #/R/id -> R)
+                    let parts = hash.substring(2).split('/');
+                    currentPageId = parts[0];
+                } else {
+                    currentPageId = "Home";
+                }
+            }
+
+            // Remove active class from all menu items
+            $('#Navi li').removeClass('active');
+
+            // Find and activate the correct menu item
+            if (currentPageId === 'Home') {
+                $('#Navi li:first').addClass('active');
+            } else {
+                // Search through all menu items for matching link
+                $('#Navi a').each(function() {
+                    let href = $(this).attr('href');
+                    
+                    // Check if this link matches the current page
+                    if (href && (href.includes(`#/${currentPageId}`) || href === `#/${currentPageId}`)) {
+                        let $li = $(this).closest('li');
+                        $li.addClass('active');
+                        
+                        // Also activate parent if this is a nested item
+                        $li.parents('li').addClass('active');
+                    }
+                });
+            }
+        };
+
+        // Start the check
+        checkSidebar();
     }
 }
