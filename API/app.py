@@ -98,17 +98,7 @@ def getSession():
     except( KeyError ):
         return jsonify('No selected parameters!'), 404
 
-@app.route("/setSession", methods=['POST'])
-def setSession():
-    try:
-        cs = request.json['case']
-        if not Path(Config.DATA_STORAGE, cs).is_dir():
-            return jsonify({'message': 'Case not found.', 'status_code': 'error'}), 404
-        session['osycase'] = cs
-        response = {"osycase": session['osycase']}
-        return jsonify(response), 200
-    except KeyError:
-        return jsonify('No selected parameters!'), 404
+
 @app.route("/setSession", methods=['POST'])
 def setSession():
     try:
