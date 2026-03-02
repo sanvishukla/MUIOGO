@@ -1869,7 +1869,7 @@ export class DataModel{
         $.each(cloneData, function (param, obj1) {
             RTSM[param] = {};
             $.each(obj1, function (sc, array) {
-                RYTSM[param][sc] = {};
+                RTSM[param][sc] = {};
                 $.each(array, function (id, obj) {
                     if(!RTSM[param][sc][obj.TechId]){ RTSM[param][sc][obj.TechId] = {}; }
                     if(!RTSM[param][sc][obj.TechId][obj.StgId]){ RTSM[param][sc][obj.TechId][obj.StgId] = {}; }
@@ -1919,60 +1919,7 @@ export class DataModel{
         return RTSMgrid;
     }
 
-    static RYTSM(RYTSMdata){
-        let RYTSM = {};
-        const cloneData = JSON.parse(JSON.stringify(RYTSMdata));
-        $.each(cloneData, function (param, obj1) {
-            RYTSM[param] = {};
-            $.each(obj1, function (sc, array) {
-                RYTSM[param][sc] = {};
-                $.each(array, function (id, obj) {
-                    if(!RYTSM[param][sc][obj.TechId]){ RYTSM[param][sc][obj.TechId] = {}; }
-                    if(!RYTSM[param][sc][obj.TechId][obj.StgId]){ RYTSM[param][sc][obj.TechId][obj.StgId] = {}; }
-                        RYTSM[param][sc][obj.TechId][obj.StgId][obj.MoId] = obj;
-                        delete obj.TechId;
-                        delete obj.StgId; 
-                        delete obj.MoId;   
-                });
-            });
-        });
-        return RYTSM;
-    }
 
-    static RYTSMgrid(genData, RYTSMdata, PARAMETERS){
-        // let techName = this.TechName(genData);
-        // let commName = this.CommName(genData);
-        // let scName = this.ScName(genData);
-        let techData = this.getTechData(genData);
-        let stgData = this.getStgData(genData);
-        let scData = this.getScData(genData);
-        let unitData = this.getUnitData(genData, PARAMETERS);
-        let paramById = this.getParamById(PARAMETERS);
-        let cloneData = JSON.parse(JSON.stringify(RYTSMdata));
-        //console.log('cloneData ', cloneData)
-        let RYTSMgrid = {};
-        $.each(cloneData, function (param, obj) {
-            RYTSMgrid[param] = [];
-            $.each(obj, function (sc, array) {
-                $.each(array, function (id, obj) {
-                    obj['Tech'] = techData[obj.TechId]['Tech'];
-                    obj['TechDesc'] = techData[obj.TechId]['Desc'];
-                    obj['Stg'] = stgData[obj.StgId]['Stg'];
-                    obj['StgDesc'] = stgData[obj.StgId]['Desc'];
-                    obj['ScId'] = sc;
-                    obj['Sc'] = scData[sc]['Scenario'];
-                    obj['ScDesc'] = scData[sc]['Desc'];
-                    let rule = paramById['RYTSM'][param]['unitRule'];
-                    let data1 = unitData['RYTSM'][param][obj.StgId];
-                    let data2 = unitData['RYTSM'][param][obj.TechId];
-                    const data = {...data1, ...data2};
-                    obj['UnitId'] = jsonLogic.apply(rule, data);
-                    RYTSMgrid[param].push(obj);
-                });
-            });
-        });
-        return RYTSMgrid;
-    }
 
     static RYTE(RYTEdata){
         let RYTE = {};

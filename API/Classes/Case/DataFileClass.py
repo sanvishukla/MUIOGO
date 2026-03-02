@@ -485,34 +485,6 @@ class DataFile(Osemosys):
                             self.f.write('{} {}{}'.format(mod, rytcString, '\n'))
             self.f.write('{}{}'.format(';', '\n'))
 
-    def gen_RYTSM(self):
-        rytsm = self.RYTSM(File.readFile(self.rytsmPath))
-        for id, param in self.PARAM['RYTSM'].items():
-            self.f.write('{} {} {} {} {} {}'.format('param', param,'default', self.defaultValue[id], ':=','\n'))
-            for stgId in self.stgIDs:
-                
-                for storageTechId in self.storageTechIDs[id][stgId]:
-                    regionHeader = True
-                    # self.f.write('{}{}'.format('[RE1,'+ self.techMap[activityTechId] + ','+ self.commMap[activityCommId] +',*,*]:', '\n'))
-                    # self.f.write('{}{}{}'.format( self.years, ':=', '\n'))
-                    for mod in self.modIds:
-                        rytcString = ''
-                        defaultValueFlag = False
-                        for yearId in self.yearIDs:
-                            for sc in self.scOrder:
-                                rytsmValue = rytsm[id][sc['ScId']][yearId][stgId][storageTechId][mod]
-                                if rytsmValue is not None and sc['Active'] == True:
-                                    if rytsmValue != self.defaultValue[id]:
-                                        defaultValueFlag = True
-                                    tmp = rytsmValue
-                            rytcString += '{} '.format(tmp)
-                        if defaultValueFlag:
-                            if regionHeader:
-                                regionHeader = False   
-                                self.f.write('{}{}'.format('[RE1,'+ self.stgMap[stgId] + ','+ self.techMap[storageTechId] +',*,*]:', '\n'))
-                                self.f.write('{}{}{}'.format( self.years, ':=', '\n'))
-                            self.f.write('{} {}{}'.format(mod, rytcString, '\n'))
-            self.f.write('{}{}'.format(';', '\n'))
 
     def gen_RYTE(self):
         ryte = self.RYTE(File.readFile(self.rytePath))
