@@ -2,6 +2,8 @@ from pathlib import Path
 import pandas as pd
 import traceback
 import json, shutil, os, time, subprocess
+import uuid
+from datetime import datetime
 from collections import defaultdict
 from itertools import product
 
@@ -2092,6 +2094,21 @@ class DataFile(Osemosys):
                 # lock[caserunname] = threading.Lock() 
                 lock.acquire()
                 caserunname = caserun
+
+            run_uuid = uuid.uuid4().hex
+            run_uuid_path = Path(Config.DATA_STORAGE, self.case, 'res', caserunname, 'runs', run_uuid)
+            run_uuid_path.mkdir(parents=True, exist_ok=True)
+            
+            metadata = {
+                "run_uuid": run_uuid,
+                "timestamp": datetime.now().isoformat(),
+                "solver": solver,
+                "mode": "blocking"
+            }
+            
+            metadata_file = run_uuid_path / "job_metadata.json"
+            with open(metadata_file, "w", encoding="utf-8") as f:
+                json.dump(metadata, f, indent=4)
 
             start_time = time.time()
             txtOut = ""
