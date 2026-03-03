@@ -12,6 +12,12 @@ from Classes.Base.SyncS3 import SyncS3
 
 case_api = Blueprint('CaseRoute', __name__)
 
+def validate_case_exists(casename):
+    if not casename:
+        return False
+    casePath = Path(Config.DATA_STORAGE, casename)
+    return casePath.is_dir()
+
 @case_api.route("/initSyncS3", methods=['GET'])
 def initSyncS3():
     try:
@@ -56,6 +62,12 @@ def getResultCSV():
 def getDesc():
     try:
         casename = request.json['casename']
+        if not validate_case_exists(casename):
+            return jsonify({
+                "message": "Case does not exist.",
+                "status_code": "error"
+            }), 404
+            
         genDataPath = Path(Config.DATA_STORAGE,casename,"genData.json")
         genData = File.readFile(genDataPath)
         response = {
@@ -77,10 +89,16 @@ def copy():
         if case != active_case:
             return jsonify({'message': 'Unauthorised: case does not match active session.', 'status_code': 'error'}), 403
 
+        src =  Path(Config.DATA_STORAGE, case)
+        if not src.is_dir():
+            session['osycase'] = None
+            return jsonify({
+                'message': 'Source case does not exist.',
+                'status_code': 'warning'
+            }), 200
+
         case_copy = case + '_copy'
         casePath = Path(Config.DATA_STORAGE, case_copy, 'genData.json')
-
-        src =  Path(Config.DATA_STORAGE, case)
         dest =  Path(Config.DATA_STORAGE, case + '_copy')
 
         if(os.path.isdir(dest)):
@@ -116,6 +134,13 @@ def deleteCase():
             return jsonify({'message': 'Unauthorised: case does not match active session.', 'status_code': 'error'}), 403
 
         casePath = Path(Config.DATA_STORAGE, case)
+        if not casePath.is_dir():
+            session['osycase'] = None
+            return jsonify({
+                'message': 'Case does not exist.',
+                'status_code': 'success_session'
+            }), 200
+
         shutil.rmtree(casePath)
 
         session['osycase'] = None
@@ -135,6 +160,11 @@ def getResultData():
         casename = request.json['casename']
         dataJson = request.json['dataJson']
         if casename != None:
+            if not validate_case_exists(casename):
+                return jsonify({
+                    "message": "Case does not exist.",
+                    "status_code": "error"
+                }), 404
             dataPath = Path(Config.DATA_STORAGE,casename,'view',dataJson)
             data = File.readFile(dataPath)
             response = data   
@@ -161,6 +191,8 @@ def resultsExists():
     try:
         casename = request.json['casename']
         if casename != None:
+            if not validate_case_exists(casename):
+                return jsonify(False), 200
             resPath = Path(Config.DATA_STORAGE, casename, 'view', 'RYT.json')
             dataPath = Path(Config.DATA_STORAGE,casename,'view','resData.json')
             data = File.readFile(dataPath)
@@ -231,6 +263,12 @@ def updateData():
                 "status_code": "error"
             }), 400
         
+        if not validate_case_exists(case):
+            return jsonify({
+                "message": "Active case directory not found.",
+                "status_code": "error"
+            }), 404
+            
         dataPath = Path(Config.DATA_STORAGE, case, dataJson)
         sourceData = File.readFile(dataPath)
         sourceData[param] = data
@@ -250,6 +288,10 @@ def saveCase():
         genData = request.json['data']
         casename = genData['osy-casename']
         case = session.get('osycase', None)
+
+        if case and not validate_case_exists(case):
+            case = None
+            session['osycase'] = None
 
         configPath = Path(Config.DATA_STORAGE, 'Variables.json')
         vars = File.readParamFile(configPath)
