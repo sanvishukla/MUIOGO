@@ -9,6 +9,19 @@ from Classes.Base import Config
 from Classes.Case.OsemosysClass import Osemosys
 from Classes.Base.FileClass import File
 from Classes.Base.CustomThreadClass import CustomThread
+
+def write_status_atomic(status_path, status_dict):
+    status_path = Path(status_path)
+    status_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = Path(str(status_path) + ".tmp")
+    
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(status_dict, f, indent=4, ensure_ascii=True)
+        f.flush()
+        os.fsync(f.fileno())
+        
+    os.replace(tmp_path, status_path)
+
 class DataFile(Osemosys):
     # def __init__(self, case):
     #     Osemosys.__init__(self, case)
@@ -2084,6 +2097,7 @@ class DataFile(Osemosys):
             raise OSError
 
     def run( self, solver, caserun, lock=None ):
+        status_file = None
         try:
             caserunname = caserun
             if lock is not None:
@@ -2093,6 +2107,25 @@ class DataFile(Osemosys):
                 lock.acquire()
                 caserunname = caserun
 
+            run_uuid = uuid.uuid4().hex
+            run_uuid_path = Path(Config.DATA_STORAGE, self.case, 'res', caserunname, 'runs', run_uuid)
+            run_uuid_path.mkdir(parents=True, exist_ok=True)
+            
+            metadata = {
+                "run_uuid": run_uuid,
+                "timestamp": datetime.now().isoformat(),
+                "solver": solver,
+                "mode": "blocking"
+            }
+            
+            metadata_file = run_uuid_path / "job_metadata.json"
+            with open(metadata_file, "w", encoding="utf-8") as f:
+                json.dump(metadata, f, indent=4)
+
+            status_file = run_uuid_path / "status.json"
+            write_status_atomic(status_file, {"status": "running"})
+            raise ValueError("Simulated catastrophic crash!")
+            
             start_time = time.time()
             txtOut = ""
             self.dataFile = Path(Config.DATA_STORAGE, self.case, 'res',caserunname,'data.txt')
@@ -2256,6 +2289,9 @@ class DataFile(Osemosys):
                 } 
 
            
+            if status_file is not None:
+                write_status_atomic(status_file, {"status": response["status_code"]})
+           
             if lock is not None:
                 lock.release()
 
@@ -2263,11 +2299,17 @@ class DataFile(Osemosys):
             # urllib.request.urlretrieve(self.dataFile, dataFile)
 
         except Exception as ex:
+            if status_file is not None:
+                write_status_atomic(status_file, {"status": "error"})
             print(ex) # do whatever you want for debugging.
             raise    # re-raise exception.
         except(IOError, IndexError):
+            if status_file is not None:
+                write_status_atomic(status_file, {"status": "error"})
             raise IndexError
         except OSError:
+            if status_file is not None:
+                write_status_atomic(status_file, {"status": "error"})
             raise OSError
     
     def generateCSVfromCBC(self, data_file, results_file, base_folder=os.getcwd()):
