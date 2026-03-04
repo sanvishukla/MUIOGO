@@ -7,6 +7,8 @@ from flask_cors import CORS
 from datetime import timedelta
 from pathlib import Path
 # from pathlib import Path
+from startup_validation import run_startup_checks, StartupValidationError
+
 
 #import json
 from Classes.Base import Config
@@ -123,8 +125,6 @@ if __name__ == '__main__':
     import mimetypes
     mimetypes.add_type('application/javascript', '.js')
     port = int(os.environ.get("PORT", 5002))
-<<<<<<< HEAD
-<<<<<<< HEAD
 
     def print_startup_info(host, current_port, server_name):
         mode = 'local' if Config.HEROKU_DEPLOY == 0 else 'heroku'
@@ -136,20 +136,12 @@ if __name__ == '__main__':
         print(f"Port: {current_port}")
         print(f"Open: http://{access_host}:{current_port}")
 
-=======
-    
-=======
->>>>>>> 7c80f7b1 (Align startup validation with merged path/solver logic (local-first resolution + Config-based paths))
-    from startup_validation import run_startup_checks, StartupValidationError
     try:
         run_startup_checks()
     except StartupValidationError as e:
         print(str(e))
         exit(1)
-<<<<<<< HEAD
-    print("PORTTTTTTTTTTT")
->>>>>>> e4c46816 (Add structured startup validation for solvers and required directories (Issue #3))
-=======
+
 
     def print_startup_info(host, current_port, server_name):
         mode = 'local' if Config.HEROKU_DEPLOY == 0 else 'heroku'
@@ -161,7 +153,6 @@ if __name__ == '__main__':
         print(f"Port: {current_port}")
         print(f"Open: http://{access_host}:{current_port}")
 
->>>>>>> 839a565c (Apply startup validation changes)
     if Config.HEROKU_DEPLOY == 0: 
         #localhost
         #app.run(host='127.0.0.1', port=port, debug=True)
