@@ -142,20 +142,29 @@ def readDataFile():
     except(IOError):
         return jsonify('No existing cases!'), 404
     
-@datafile_api.route("/validateInputs", methods=['POST'])
+@datafile_api.route("/validateInputs", methods=["POST"])
 def validateInputs():
     try:
-        casename = request.json['casename']
-        caserunname = request.json['caserunname']
-        if casename != None:
+        casename = request.json["casename"]
+        caserunname = request.json["caserunname"]
+        if casename is not None:
             df = DataFile(casename)
             validation = df.validateInputs(caserunname)
-            response = validation    
-        else:  
-            response = None     
-        return jsonify(response), 200
-    except(IOError):
-        return jsonify('No existing cases!'), 404
+            return jsonify(validation), 200
+        else:
+            return jsonify(None), 200
+    except KeyError as e:
+        # UI-friendly but ETL-loggable
+        return jsonify({
+            "msg": (
+                f"Missing parameter in data file: {e!r}. "
+                "Regenerate data file before validation."
+            ),
+            "status_code": "error",
+            "missing_key": str(e),
+        }), 400
+    except IOError:
+        return jsonify("No existing cases!"), 404
 
 @datafile_api.route("/downloadDataFile", methods=['GET'])
 def downloadDataFile():

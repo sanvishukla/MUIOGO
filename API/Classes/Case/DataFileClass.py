@@ -1629,19 +1629,15 @@ class DataFile(Osemosys):
 
             response = {
                 "msg": msg,
-                "status_code": 'success'
-            }   
+                "status_code": "success",
+            }
             return response
-        except(IOError, KeyError):
-            response = {
-                "msg": 'Some of the params are missing in data file (data file created before 4.9 ver). Please generate data file again and run check',
-                "status_code": 'error'
-            } 
-            return response  
-        except(IOError, IndexError):
-            raise IndexError
+        except IOError:
+            raise
+        except IndexError:
+            raise
         except OSError:
-            raise OSError
+            raise
         
     def preprocessData(self, data_infile, data_outfile):
         try:
