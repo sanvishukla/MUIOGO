@@ -114,10 +114,20 @@ def getSession():
 @app.route("/setSession", methods=['POST'])
 def setSession():
     try:
-        cs = request.json['case']
+        if not request.is_json:
+            return jsonify({'message': 'Request must be JSON.', 'status_code': 'error'}), 400
+            
+        data = request.get_json(silent=True)
+        if data is None:
+            return jsonify({'message': 'Malformed JSON payload.', 'status_code': 'error'}), 400
+            
+        cs = data['case']
         if cs is None:
             session.pop('osycase', None)
             return jsonify({"osycase": None}), 200
+
+        if not isinstance(cs, str) or not cs.strip():
+            return jsonify({'message': 'Invalid case name.', 'status_code': 'error'}), 400
 
         from pathlib import Path
         if not Path(Config.DATA_STORAGE, cs).is_dir():
