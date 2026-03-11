@@ -68,15 +68,11 @@ For setup options, use the "--help" flag:
 
 ## Demo Data
 
-- Archive: `assets/demo-data/CLEWs.Demo.zip`
+The demo dataset (`CLEWs.Demo.zip`) is hosted as a [GitHub release asset](https://github.com/EAPD-DRB/MUIOGO/releases/tag/demo-data) and downloaded automatically during setup when not already cached locally.
+
 - SHA-256: `facf4bda703f67b3c8b8697fea19d7d49be72bc2029fc05a68c61fd12ba7edde`
 
-Setup installs demo data by default.
-
-To install demo data manually:
-
-1. Unzip `assets/demo-data/CLEWs.Demo.zip` into `WebAPP/DataStorage/`
-2. Confirm this folder exists: `WebAPP/DataStorage/CLEWs Demo/`
+Setup installs demo data by default. The archive is downloaded once, cached in `assets/demo-data/`, and reused on subsequent runs.
 
 One of the core goals of MUIOGO is to become platform independent so separate platform-specific ports are no longer required.
 
