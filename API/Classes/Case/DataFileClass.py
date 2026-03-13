@@ -2082,6 +2082,18 @@ class DataFile(Osemosys):
             raise IndexError
         except OSError:
             raise OSError
+    def get_execution_context(self, caserunname: str) -> dict:
+        """
+        [NEW - OG-CLEWS Integration]
+        Helper method to expose paths to the adapter without running the model.
+        """
+        return {
+            'csv_dir': str(Path(Config.DATA_STORAGE, self.case, 'res', caserunname, 'csv').resolve()),
+            'data_txt': str(Path(Config.DATA_STORAGE, self.case, 'res', caserunname, 'data.txt').resolve()),
+            'results_txt': str(Path(Config.DATA_STORAGE, self.case, 'res', caserunname, 'results.txt').resolve()),
+            'case_id': self.case,
+            'run_id': caserunname
+        }
 
     def run( self, solver, caserun, lock=None ):
         try:

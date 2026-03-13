@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import platform
+import sys
 
 # Central path validation utility (prevents path traversal)
 def validate_path(base_dir, user_input):
@@ -80,6 +81,24 @@ if not os.access(DATA_STORAGE, os.W_OK):
 
 HEROKU_DEPLOY = 0
 AWS_SYNC = 0
+
+# -------------------------
+# NEW: OG-CLEWS Integration Configs (Additive Only)
+# -------------------------
+OGCORE = {
+    'python_bin': sys.executable,  # Path to the isolated python environment for OG-Core
+    'entry_script': 'og_core_runner.py',
+    'params_format': 'json',   
+    'timeout_seconds': 3600
+}
+
+WORKFLOW = {
+    'max_iterations': 50,
+    'convergence_epsilon': 1e-4,
+    'damping_factor': 0.5,
+    'oscillation_window': 3
+}
+# -------------------------
 
 PINNED_COLUMNS = ('Sc', 'Tech', 'Comm', 'Emis','Stg', 'Ts', 'MoO', 'UnitId', 'Se','Dt', 'Dtb', 'paramName','TechName', 'CommName', 'EmisName', 'ConName', 'MoId')
 
