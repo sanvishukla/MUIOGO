@@ -102,10 +102,9 @@ Templates:
 
 ### Advanced Setup and Packaging
 
-If you need to install Python dependencies without the setup scripts:
-
-This manual path still requires a supported Python version (`3.10` to `3.12`).
-It does not add compatibility for newer Python releases.
+If you need to install Python dependencies without the setup scripts, note
+that this manual path still requires a supported Python version (`3.10` to
+`3.12`) and does not add compatibility for newer Python releases.
 
 ```bash
 # All platforms — runtime

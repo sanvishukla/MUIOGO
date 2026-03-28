@@ -37,4 +37,5 @@ Manual dependency installation
 
 For advanced users, you can install Python dependencies manually with
 ``pip install -r requirements.txt``, but that path still requires a supported
-Python version and does not add compatibility for newer Python releases.
+Python version (3.10 to 3.12) and does not add compatibility for newer Python
+releases.

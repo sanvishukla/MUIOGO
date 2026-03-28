@@ -4,14 +4,17 @@ import os
 import secrets
 import sys
 
+# Fail fast: unsupported Python hits cryptic pandas/numpy import errors without this.
 SUPPORTED_PYTHON_MIN = (3, 10)
 SUPPORTED_PYTHON_MAX = (3, 13)
 
 if not (SUPPORTED_PYTHON_MIN <= sys.version_info[:2] < SUPPORTED_PYTHON_MAX):
     detected_version = ".".join(str(part) for part in sys.version_info[:3])
+    min_str = f"{SUPPORTED_PYTHON_MIN[0]}.{SUPPORTED_PYTHON_MIN[1]}"
+    max_str = f"{SUPPORTED_PYTHON_MAX[0]}.{SUPPORTED_PYTHON_MAX[1] - 1}"
     print(
         f"Unsupported Python version: {detected_version}\n"
-        "MUIOGO currently supports Python 3.10 to 3.12 (recommended: 3.11).\n"
+        f"MUIOGO currently supports Python {min_str} to {max_str} (recommended: 3.11).\n"
         "Use scripts/setup.sh or scripts\\setup.bat with a supported Python installation.",
         file=sys.stderr,
     )
