@@ -2,6 +2,20 @@ from pathlib import Path
 import logging
 import os
 import secrets
+import sys
+
+SUPPORTED_PYTHON_MIN = (3, 10)
+SUPPORTED_PYTHON_MAX = (3, 13)
+
+if not (SUPPORTED_PYTHON_MIN <= sys.version_info[:2] < SUPPORTED_PYTHON_MAX):
+    detected_version = ".".join(str(part) for part in sys.version_info[:3])
+    print(
+        f"Unsupported Python version: {detected_version}\n"
+        "MUIOGO currently supports Python 3.10 to 3.12 (recommended: 3.11).\n"
+        "Use scripts/setup.sh or scripts\\setup.bat with a supported Python installation.",
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
 
 from flask import Flask, jsonify, request, session, render_template
 from flask_cors import CORS
