@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
-# verification_checklist.sh - High-level sanity check for MUIOGO base.
-# Fail if any command fails.
+# ==============================================================================
+# MUIOGO VERIFICATION GATEWAY
+# ==============================================================================
+# This script is the primary safety gate for upstream pulls from OSeMOSYS/MUIO.
+# It ensures that MUIOGO's portability, security, and stability are preserved.
+#
+# MAINTAINER NOTES (Always Review these files during a v5.x pull):
+# 1. API/app.py - Core Flask config and blueprint registration.
+# 2. API/Classes/Case/OsemosysClass.py - Model execution logic.
+# 3. API/Routes/Case/CaseRoute.py - Backend API for case management.
+# 4. WebAPP/Classes/Osemosys.Class.js - Frontend solver coordination.
+#
+# REJECTED PATTERNS:
+# - Hardcoded paths (e.g. C:\)
+# - Insecure session/path handling
+# - Breaking Python 3.10-3.12 support
+# ==============================================================================
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,58 +37,61 @@ _print_header() {
     echo -e "\n${BOLD}=== $1 ===${RESET}"
 }
 
-_print_pass() { echo -e "  ${GREEN}[PASS]${RESET} $1"; }
-_print_fail() { echo -e "  ${RED}[FAIL]${RESET} $1"; }
-_print_warn() { echo -e "  ${YELLOW}[WARN]${RESET} $1"; }
+_print_status() {
+    if [ "$1" -eq 0 ]; then
+        echo -e "  ${GREEN}[PASS]${RESET} $2"
+    else
+        echo -e "  ${RED}[FAIL]${RESET} $2"
+        [ -n "${3:-}" ] && echo -e "\n${3}"
+        exit 1
+    fi
+}
 
 # 1. Environment & Solvers check
-_print_header "Step 1: setup.sh --check"
-# We skip demo-data in the smoke check as it's not strictly required for API/Backend sanity.
-if "$SCRIPT_DIR/setup.sh" --check --no-demo-data; then
-    _print_pass "Environment and solvers are ready."
+_print_header "Step 1: Environment & Solvers"
+# Run setup check quietly, only show output on failure
+if OUTPUT=$("$SCRIPT_DIR/setup.sh" --check --no-demo-data 2>&1); then
+    _print_status 0 "Python venv and solvers (GLPK/CBC) are ready."
 else
-    _print_fail "Environment check failed. Run ./scripts/setup.sh first."
-    exit 1
+    _print_status 1 "Environment check failed. Run ./scripts/setup.sh first." "$OUTPUT"
 fi
 
 # 2. Syntax Check (py_compile)
-_print_header "Step 2: Python syntax check"
-python3 -m py_compile "$PROJECT_ROOT/API/app.py"
-_print_pass "app.py is syntactically valid."
+_print_header "Step 2: Python Syntax Check"
+if python3 -m py_compile "$PROJECT_ROOT/API/app.py" 2>/dev/null; then
+    _print_status 0 "app.py is syntactically valid."
+else
+    _print_status 1 "Syntax error detected in app.py."
+fi
 
 # 3. Smoke Test Harness
-_print_header "Step 3: smoke_test.py (unittest)"
-if python3 "$PROJECT_ROOT/tests/smoke_test.py"; then
-    _print_pass "Smoke tests passed."
+_print_header "Step 3: API & Route Smoke Tests"
+if OUTPUT=$(python3 "$PROJECT_ROOT/tests/smoke_test.py" 2>&1); then
+    _print_status 0 "Smoke tests passed (API boot and core routes)."
 else
-    _print_fail "Smoke tests failed."
-    exit 1
+    _print_status 1 "Smoke tests failed." "$OUTPUT"
 fi
 
 # 4. Unresolved Merge state
-_print_header "Step 4: Check for unresolved git merge/rebase"
+_print_header "Step 4: Git Merge Integrity"
 if [ -d "$PROJECT_ROOT/.git" ]; then
     if [ -f "$PROJECT_ROOT/.git/MERGE_HEAD" ] || [ -f "$PROJECT_ROOT/.git/REBASE_HEAD" ] || [ -f "$PROJECT_ROOT/.git/CHERRY_PICK_HEAD" ]; then
-        _print_fail "Unresolved git merge/rebase detected (.git/MERGE_HEAD or similar exists)."
-        exit 1
+        _print_status 1 "Unresolved git merge/rebase detected (.git/MERGE_HEAD exists)."
     else
-        _print_pass "No unresolved git merge/rebase found."
+        _print_status 0 "No unresolved git merge/rebase state found."
     fi
 else
-    _print_warn ".git directory not found (skipping git state check)."
+    echo -e "  ${YELLOW}[SKIP]${RESET} Not a git repository."
 fi
 
-# 5. Check for conflict markers
-_print_header "Step 5: Check for conflict markers"
+# 5. Conflict Markers scan
+_print_header "Step 5: Conflict Marker Scan"
 # Use ^ to match markers at the beginning of the line to avoid decorative comments
 if grep -rnE "^<<<<<<<|^=======|^>>>>>>>" "$PROJECT_ROOT/API" "$PROJECT_ROOT/WebAPP/App" --exclude-dir=__pycache__ > /dev/null 2>&1; then
-    _print_fail "Conflict markers (<<<<<<<, =======, >>>>>>>) found in the codebase!"
+    _print_status 1 "Conflict markers found in the codebase!"
     grep -rnE "^<<<<<<<|^=======|^>>>>>>>" "$PROJECT_ROOT/API" "$PROJECT_ROOT/WebAPP/App" --exclude-dir=__pycache__
-    exit 1
 else
-    _print_pass "No conflict markers found in key backend/frontend folders."
+    _print_status 0 "No conflict markers found in key backend/frontend folders."
 fi
 
-_print_header "Verification Complete"
-_print_pass "Codebase is healthy and ready for upstream pull."
-echo ""
+echo -e "\n${BOLD}${GREEN}Verification Complete: MUIOGO is healthy and ready for upstream pull.${RESET}\n"
